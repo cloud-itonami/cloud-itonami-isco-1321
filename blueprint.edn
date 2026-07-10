@@ -1,10 +1,1 @@
-{:itonami.blueprint/id "cloud-itonami-isco-1321"
- :itonami.blueprint/name "Independent Manufacturing Floor Management"
- :itonami.blueprint/isco-08 "1321"
- :itonami.blueprint/domain :manufacturing/floor-management
- :itonami.blueprint/license "AGPL-3.0-or-later"
- :itonami.blueprint/social-impact [:local-jobs :quality-assurance :worker-safety]
- :itonami.blueprint/governor :manufacturing-floor-governor
- :itonami.blueprint/robotics true
- :itonami.blueprint/required-technologies [:robotics :identity :dmn :bpmn :audit-ledger :telemetry]
- :itonami.blueprint/status :public-oss}
+[{:itonami.blueprint/social-impact [:local-jobs :quality-assurance :worker-safety], :itonami.blueprint/domain :manufacturing/floor-management, :itonami.blueprint/required-technologies [:robotics :identity :dmn :bpmn :audit-ledger :telemetry], :itonami.blueprint/isco-08 "1321", :itonami.blueprint/name "Independent Manufacturing Floor Management", :itonami.blueprint/governor :manufacturing-floor-governor, :itonami.blueprint/robotics true, :db/id -1, :itonami.blueprint/status :public-oss, :itonami.blueprint/id "cloud-itonami-isco-1321", :itonami.blueprint/license "AGPL-3.0-or-later"}]
