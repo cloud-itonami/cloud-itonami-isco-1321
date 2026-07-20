@@ -25,8 +25,23 @@
        higher safety-class, forcing human sign-off; it is never
        auto-approved regardless of confidence.
   SOFT:
-    4. Confidence floor → escalate."
-  (:require [manufacturing-floor.store :as store]))
+    4. Confidence floor → escalate.
+
+  Dispositions: `:proceed | :hold | :human-approval | :human-required`.
+  `:human-approval` (existing) means the robot COULD perform the action but
+  a human must sign off first. `:human-required` (ADR-2607202600) is a
+  DISTINCT disposition: the robot is structurally unable to perform the
+  task at all (missing/insufficient automation for it) and a human must
+  actually DO the work. It is triggered ONLY from the explicit ground-truth
+  field `:human-required?` on the proposal — never inferred by the
+  governor — mirroring this fleet's discipline that HARD/dispositional
+  checks key off explicit record fields, not guesses. A proposal with real
+  HARD violations still `:hold`s regardless of `:human-required?` (checked
+  first, below)."
+  (:require [manufacturing-floor.store :as store]
+            [kotoba.occupation :as occupation]))
+
+(def isco "1321")
 
 (def confidence-floor 0.6)
 (def safety-classes [:none :low :medium :high :safety-critical])
@@ -59,7 +74,14 @@
 (defn assess
   "Assess a proposal against `env` (a map with `:order-fn`/`:qc-checks-fn`
   lookups, decoupled from any concrete Store so this stays pure). Returns
-  `{:decision :proceed|:hold|:human-approval :violations [...] :confidence n}`."
+  `{:decision :proceed|:hold|:human-approval|:human-required :violations [...] :confidence n}`.
+
+  `:human-required` (ADR-2607202600) fires ONLY when the proposal carries
+  an explicit `:human-required? true` ground-truth field plus a `:gap` map
+  ({:task :reason :duration :location :urgency}, see
+  `kotoba.occupation/human-gap-referral-draft`) — never inferred. It is
+  checked AFTER hard-violation checks, so a proposal with real HARD
+  violations still `:hold`s even when `:human-required?` is true."
   [env proposal]
   (let [violations (hard-violations env proposal)
         safety-class (or (:safety-class proposal) :none)
@@ -67,6 +89,10 @@
     (cond
       (seq violations)
       {:decision :hold :violations violations :confidence confidence}
+
+      (true? (:human-required? proposal))
+      {:decision :human-required :violations [] :confidence confidence
+       :referral (occupation/human-gap-referral-draft isco (:gap proposal))}
 
       (>= (safety-rank safety-class) (safety-rank :high))
       {:decision :human-approval :violations [] :confidence confidence}
