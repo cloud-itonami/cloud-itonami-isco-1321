@@ -47,12 +47,14 @@ See [`docs/business-model.md`](docs/business-model.md) and
 
 ## Reference implementation
 
-`src/manufacturing_floor/{store,governor}.cljc` is a minimal but real
-implementation of the Core Contract above (pure cljc, no external deps):
+`src/manufacturing_floor/*.cljc` is a real, end-to-end implementation of
+the Core Contract above (all `.cljc`, no external deps beyond
+`kotoba-lang/occupation` and `kotoba-lang/langgraph`):
 
 - `manufacturing-floor.store` — `Store` protocol + `MemStore`: lines, work
-  orders, QC checks, incidents. A QC check can only be recorded against a
-  registered work order on a registered line (work-order provenance).
+  orders, QC checks, incidents, and human-gap referral records. A QC
+  check can only be recorded against a registered work order on a
+  registered line (work-order provenance).
 - `manufacturing-floor.governor` — `ManufacturingFloorGovernor`: `assess`
   gates a proposal against the work-order/QC env. Hard invariants force
   `:hold` (no work order, direct-write instead of `:propose`, or a
@@ -60,17 +62,39 @@ implementation of the Core Contract above (pure cljc, no external deps):
   `:high` safety-class); clearing a failed QC check to let production
   proceed always requires `:high`+ safety-class and thus
   `:human-approval` — it can never be auto-cleared; low-confidence
-  proposals also escalate.
+  proposals also escalate; an explicit `:human-required?` ground-truth
+  field (never inferred) routes to the distinct `:human-required`
+  disposition (ADR-2607202600) instead.
+- `manufacturing-floor.advisor` — the Floor Advisor node: proposes
+  `:qc-check`, `:clear-fail`, and `:human-task` actions. A deterministic
+  `MockAdvisor` by default; every proposal has `:effect :propose` — it can
+  never itself perform a write.
+- `manufacturing-floor.phase` — the 0→3 rollout gate. `:clear-fail` is
+  never in any phase's `:auto` set — not just a rollout-policy choice but
+  a structural consequence of the governor's own `:high`-safety-class
+  check (a valid `:clear-fail` proposal always forces `:human-approval`
+  one layer down); only a governor-clean `:qc-check` may auto-commit, and
+  only at the default phase (3).
+- `manufacturing-floor.operation` — wires the above into a REAL compiled
+  [`langgraph-clj`](https://github.com/kotoba-lang/langgraph) `StateGraph`
+  (`build`): `:intake → :advise → :govern → :decide →` `:commit` /
+  `:request-approval →` `:commit`/`:hold` / `:hold` / `:human-gap`, with a
+  genuine `interrupt-before #{:request-approval}` human-sign-off gate
+  (`run-request!`/`approve!`/`reject!`). The Advisor and Governor are never
+  called directly by anything outside this graph — one graph run is one
+  governed proposal, end to end.
 
 ```bash
-clojure -M:test   # 7 tests, 13 assertions, green
+clojure -M:dev:test   # 24 tests, 88 assertions, green (governor · operation)
 ```
 
-This is what backs this repo's `:maturity :implemented` entry in
-[`kotoba-lang/occupation`](https://github.com/kotoba-lang/occupation) —
-the 8th `cloud-itonami-isco-*` occupation to reach that tier, after
-`cloud-itonami-isco-6112`, `-2221`, `-7126`, `-4321`, `-9312`, `-5322` and
-`-8332` (ADR-2607012000).
+This backs this repo's `:maturity :implemented` entry in
+[`kotoba-lang/occupation`](https://github.com/kotoba-lang/occupation): a
+real compiled StateGraph (not a data-shaped stand-in), a real Advisor
+protocol + mock, and the pre-existing governor/store genuinely wired
+together and exercised end-to-end by `manufacturing-floor.operation-test` —
+mirroring `cloud-itonami-isco-7126`'s plumbing actor, one of several
+`cloud-itonami-isco-*` occupations already at this tier (ADR-2607012000).
 
 ## License
 
