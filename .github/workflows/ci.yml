@@ -1,0 +1,61 @@
+name: CI
+
+# This project's deps.edn pins kotoba-lang/occupation AND
+# kotoba-lang/langgraph via in-monorepo :local/root paths
+# (../../kotoba-lang/occupation, ../../kotoba-lang/langgraph), and the
+# :dev alias overrides langgraph's own transitive langchain dep the same
+# way. kotoba-lang/occupation ITSELF pins kotoba-lang/technology the same
+# way (../technology). None of these resolve on a bare single-repo
+# checkout, so the test job reconstructs the workspace layout by checking
+# out all four siblings (all PUBLIC) into the expected relative paths --
+# no token needed. Same base pattern as cloud-itonami-isco-3121 /
+# cloud-itonami-isco-0210 / cloud-itonami-iso3166-ago /
+# cloud-itonami-isco-7126 (the latter needing kotoba-lang/technology
+# transitively via kotoba-lang/occupation, same as this repo).
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: DeLaGuardo/setup-clojure@13.4
+        with: { cli: latest }
+      - name: clj-kondo (errors fail the build)
+        run: clojure -M:lint
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { path: orgs/cloud-itonami/cloud-itonami-isco-1321 }
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/occupation
+          path: orgs/kotoba-lang/occupation
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/technology
+          path: orgs/kotoba-lang/technology
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/langgraph
+          path: orgs/kotoba-lang/langgraph
+      - uses: actions/checkout@v4
+        with:
+          repository: kotoba-lang/langchain
+          path: orgs/kotoba-lang/langchain
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: DeLaGuardo/setup-clojure@13.4
+        with: { cli: latest }
+      - name: test (governor · operation, real compiled StateGraph end-to-end)
+        working-directory: orgs/cloud-itonami/cloud-itonami-isco-1321
+        run: clojure -M:dev:test
