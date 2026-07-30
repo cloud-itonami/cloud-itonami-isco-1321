@@ -85,7 +85,7 @@
   [env proposal]
   (let [violations (hard-violations env proposal)
         safety-class (or (:safety-class proposal) :none)
-        confidence (or (:confidence proposal) 1.0)]
+        confidence (or (:confidence proposal) 0.0)]
     (cond
       (seq violations)
       {:decision :hold :violations violations :confidence confidence}
