@@ -6,8 +6,8 @@ documentation, examples and open occupation blueprint.
 ## Development
 
 ```bash
-clojure -M:dev:test
-clojure -M:lint
+kbb -M:dev:test
+kbb -M:lint
 ```
 
 Keep changes small and include tests for policy, audit, store or disclosure

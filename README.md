@@ -85,7 +85,7 @@ the Core Contract above (all `.cljc`, no external deps beyond
   governed proposal, end to end.
 
 ```bash
-clojure -M:dev:test   # 24 tests, 88 assertions, green (governor · operation)
+kbb -M:dev:test   # 24 tests, 88 assertions, green (governor · operation)
 ```
 
 This backs this repo's `:maturity :implemented` entry in
