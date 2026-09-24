@@ -1,0 +1,42 @@
+;; What this vertical's robot physically does, declared for
+;; kotoba.robotics.process (kotoba-lang/robotics). `kbb -M:dev:physics` runs it.
+;;
+;; README "Robotics premise": a shop-floor robot performs material handling,
+;; assembly assist and quality scanning for manufacturing managers
+;; (ISCO 1321). Its physical work: an AMR tugging parts carts between the
+;; stores and the line, an arm holding housings for the assembler, and
+;; proof-testing coupons cut from incoming structural steel plate.
+;;
+;; Every number without a cited source is marked `estimate` in its :basis.
+;; Replacing an estimate with a sourced value is this bot's growth work.
+{:physics/schema "itonami.physical-ai.spec.v1"
+ :repo "cloud-itonami/cloud-itonami-isco-1321"
+ :cases
+ [{:id :parts-cart-tug
+   :kind :transport
+   :procedure "AMR tugs a loaded parts cart 80 m from the stores to the assembly line side"
+   :params {:mass-kg 250.0 :distance-m 80.0 :v-max-mps 1.5 :a-max-mps2 0.5
+            :brake-decel-mps2 0.8 :drive-force-n 600.0 :crr 0.015
+            :cog-height-m 0.50 :support-half-length-m 0.40}
+   :sweep {:param :payload-kg :values [100.0 300.0 600.0 900.0 1200.0]}
+   :quantity :cycle-time-s
+   :limit {:max 60.0 :basis "estimate: one tug inside the line's one-minute kitting replenishment slot"}
+   :boundary {:lo 50.0 :hi 3000.0}}
+  {:id :housing-assembly-assist
+   :kind :manipulator
+   :procedure "arm lifts a cast gearbox housing from the fixture and holds it at the assembler's working height"
+   :params {:l1-m 0.70 :l2-m 0.60 :m1-kg 12.0 :m2-kg 8.0
+            :from [0.80 0.00] :to [0.50 0.60] :duration-s 2.0 :steps 400}
+   :sweep {:param :payload-kg :values [5.0 10.0 15.0 20.0 30.0]}
+   :quantity :peak-tau1-nm
+   :limit {:max 300.0 :basis "estimate: continuous shoulder torque of a ~20 kg-payload collaborative arm"}
+   :boundary {:lo 1.0 :hi 80.0}}
+  {:id :incoming-plate-coupon
+   :kind :material
+   :procedure "quality scan flags a heat of S235 plate; a 20 x 5 mm coupon is pulled to the proof load before the heat is released to the line"
+   :params {:length-m 0.10 :area-m2 1.0e-4 :youngs-modulus-pa 210.0e9 :yield-stress-pa 235.0e6
+            :hardening-pa 2.0e9 :density-kg-m3 7850.0}
+   :sweep {:param :max-force-n :values [15000.0 20000.0 22500.0 25000.0 30000.0]}
+   :quantity :final-strain
+   :limit {:max 0.00112 :basis "EN 10025-2 S235 minimum yield strength 235 MPa (t <= 16 mm) with E = 210 GPa (EN 1993-1-1): elastic-limit strain 235/210000 = 0.00112"}
+   :boundary {:lo 10000.0 :hi 30000.0}}]}

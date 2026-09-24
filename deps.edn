@@ -8,12 +8,21 @@
  ;; repo is standalone (forkable outside the workspace); these :local/root
  ;; paths only resolve inside the monorepo checkout -- a standalone fork
  ;; should override them with git coordinates.
- :deps {io.github.kotoba-lang/occupation
+ :deps {
+        ;; kotoba.robotics.process: the process-physics solvers and probe this
+        ;; repo's physics.edn runs on (physical-AI bot, scripts/physical-ai-bots).
+        io.github.kotoba-lang/robotics {:local/root "../../kotoba-lang/robotics"}
+io.github.kotoba-lang/occupation
         {:local/root "../../kotoba-lang/occupation"}
         io.github.kotoba-lang/langgraph
         {:local/root "../../kotoba-lang/langgraph"}}
  :aliases
- {;; offline workspace dev -- pin transitive langchain (langgraph's own
+ {
+  ;; kbb -M:physics -> the physical-AI bot's measurement: runs physics.edn on
+  ;; kotoba.robotics.process and prints one probe map. Exit 2 = could not measure.
+  :physai-test {:extra-paths ["test"] :main-opts ["-m" "cognitect.test-runner"]}
+  :physics {:main-opts ["-m" "kotoba.robotics.process.probe"]}
+;; offline workspace dev -- pin transitive langchain (langgraph's own
   ;; sole dep) to local checkout, same convention as every sibling actor.
   :dev {:override-deps
         {io.github.kotoba-lang/langchain
