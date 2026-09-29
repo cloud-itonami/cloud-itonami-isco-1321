@@ -2,7 +2,7 @@
   "FloorOperation -- one manufacturing-floor proposal (record a QC check /
   clear a failed QC check / structural human-task referral) = one
   supervised actor run, expressed as a REAL `langgraph.graph/state-graph`
-  (per ADR-2607011000 / CLAUDE.md Actors section; mirrors
+  (per ADR-2607011000 / AGENTS.md Actors section; mirrors
   `plumbing.operation` [cloud-itonami-isco-7126] and
   `marketentry.operation` [cloud-itonami-iso3166-ago]). The Floor Advisor
   (`manufacturing-floor.advisor`) is sealed into a single :advise node;
