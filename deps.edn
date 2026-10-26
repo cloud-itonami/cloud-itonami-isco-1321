@@ -11,11 +11,12 @@
  :deps {
         ;; kotoba.robotics.process: the process-physics solvers and probe this
         ;; repo's physics.edn runs on (physical-AI bot, scripts/physical-ai-bots).
-        io.github.kotoba-lang/robotics {:local/root "../../kotoba-lang/robotics"}
+        io.github.kotoba-lang/robotics
+        {:local/root "../../kotoba-lang/kotoba/lib/kotoba.robotics"}
 io.github.kotoba-lang/occupation
-        {:local/root "../../kotoba-lang/occupation"}
+        {:local/root "../../kotoba-lang/kotoba/lib/kotoba.occupation"}
         io.github.kotoba-lang/langgraph
-        {:local/root "../../kotoba-lang/langgraph"}}
+        {:local/root "../../kotoba-lang/kotoba/lib/kotoba.langgraph"}}
  :aliases
  {
   ;; kbb -M:physics -> the physical-AI bot's measurement: runs physics.edn on
